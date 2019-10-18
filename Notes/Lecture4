@@ -1,0 +1,145 @@
+Recap Lecture 3_________________________________________________________________________________
+RNNs you can't store very much
+
+LSTMs have a memory cell that selectively stores just a little bit of previous data in memory
+
+You need bi-directional because you need both directions to accurately process text
+    - An LSTM has 3 gates that control memory that is saved
+    - GRUs only have 2 of these gates - more efficient to compute (tend to be more popular)
+    
+Transformer networks are hot right now
+    - ELMO embeddings
+        - Bit more context than word2vec
+        - Context added during prediction - you get a different vector for Apple (computer) and apple (fruit)
+    - Word2vec embeddings
+        - Train a model with context around a word
+        - With a large training set will capture semantic AND syntactic information
+        - Prediction doesn't depend on context
+
+Text classification
+    - # of classes
+        - Multi-class - more than one class (A/B/C/D)
+        - Multi-label - each instance can have more than one label
+    - Balanced dataset: Equal amount in each class
+        - Unbalanced this is not true, ML is harder
+    - Metrics
+        - Accuracy: Portion of correctly classified examples
+            - This is not good when your data is unbalanced
+        - Precision: What percent of all positively classified samples were actually positive
+        - Recall: What percent of all positive values did you capture?
+        - F1 score: Harmonic mean of precision & recall
+    - Micro & macro-average
+        - Macro: compute metric independently for each class and then average
+            - Gives each class equal weight
+        - Micro: Averages all true positives, false negatives, etc together and then averages
+            - Like a "weighted" macro average
+        - For the problem in the slide, a micro avg is more meaningful bc it weights based on class size
+One-hot encoding text
+    - Dictionary: set of all words used in training data
+        - Each word in dictionary represented by a binary value
+        - "Cherries are delicious" will be 0001011
+    - Encoding will be the size of your dictionary
+        - First bit is for "unknown" words
+        - Set of unique words in all of your training sets
+    - Word order is lost: this is encoded as a "bag of words"
+        
+        
+Lecture 4_______________________________________________________________________________________
+
+Bag-of-words
+    - Document is converted to a set of words, and word order is lost
+        - "Cherries are delicious" is encoded the same as "are cherries delicious"
+    - You can encode binary (is the word in the text or no?)
+    - Can count how many times a word appears: use raw term frequencies
+        - If "cherries" appears twice, you'll get a freq for "cherries" of 2
+        - Problem with this is stop words!
+    - Dealing with stop words & unimportant words
+        - It's easy to get rid of "the" and "a" - need TF-IDF for more common but specific words
+
+Zipf's law:
+The frequency of any word is inversely proportional to its rank in the frequency table. The most frequent word will occur approximately twice as often as the second most frequent word, three times as often as the third most frequent word, etc.
+
+Tf-idf
+    - Need to remove words that are specific but unimportant
+        - Like "communication" from job resumes or "restaurant" from yelp reviews
+
+N-grams
+
+ML for text classification
+    - Each word is a feature. Value of feature can be binary, frequency, tf-idf weight, etcv
+    - Output is a category (positive or negative, etc)
+    - Weights are normalized to euclidean unit distance (L2 normalization)
+        - This is different from L2 regularization - why?
+    - K Nearest Neighbors
+        - Instance-based learning algorithm
+    - Decision trees
+        - Likely will not work bc individual words are not so binary
+    - Logistic regression
+        - Very commonly used for text classification
+        - Output is a probability that an example is of class A
+        - If you want to do multi-class, break it down into several different binary problems
+            - One vs rest is most common
+
+SVMs
+    - Finds maximum-margin hyperplane that separates 2 classes
+        - Great algorithm for NLP - probably the best that is not deep learning
+        - Usually works better than logistic regression
+    - Works similarly to logistic regression - just trying to find vector parameters
+        - BUT trains on only the data points that lie closest to the decision surface
+            - These are called the support vectors
+        - SVM maximizes the margin between points near the decision boundary
+    - Lagrange multipliers
+        - Find the local maxima and minima of a function subject to equality constraints
+        - Just the optimization algorithm that SVMs use
+    - Nonlinear transformations
+        - Make an SVM more flexible by allowing polynomial parameter terms
+        - Use an SVM kernel function to make a 2D space 3D - this makes it easily separable
+    - We stan SVMs
+        - Work well for high-dimensional datasets bc of the support vectors
+        - Work better on clean data - noisy data is hard to classify
+    - Text is usually linearly separable
+        - No need to use nonlinear kernels - good news for us
+        - Linear kernels are much faster
+        - Use liblinear library
+    - Gridsearch
+        - Brute force approach to hyperparameter tuning
+        - For 3 params with 5 values each, you need to run 5^3 (5*5*5) experiments
+        - Want to do n-fold CV
+        
+Fasttext
+    - Library for efficient text classification and word representation learning
+        - Builds upon word2vec
+            - BUT solves problems of no sentence representation and no morphology
+            - No sentence rep: sentence meaning is not represented well
+            - No morphology: "disaster" and "disastrous" have independent word vectors
+        - Word2vec refresher
+            - CBOW: tries to predict the word given the context of the word
+            - Skip-gram: more popular of the two, similar function. Predicts context given the word.
+        - Skip-gram
+            - Maximize probability of a context word, given a word
+            - This is expensive with softmax activation b/c you have to calculate for the whole dictionary
+            - 2 optimizations:
+                - Hierarchical softmax trick 
+                - Negative sampling (subsampling) - randomly select N negative examples to go in with positive examples
+    - Fasttext uses skipgram but encodes morphological representation
+        - Creates character n-gram representations
+            - Allows you to compute word representations for words outside of the training set
+            - This is great because you can catch morphological variations of your dictionary words
+        - Word is represented as a bag of character 3-to-6-grams
+            - Start and end symbols are < and >
+            - Hashing function maps n-grams to integers of large size (to reduce the size of the n-grams)
+                - This allows the data to fit in memory
+        - Uses stochastic gradient descent to optimize neg(log(likelihood))
+    - Results
+        - Checked semantic (word meaning) and syntactic (grammar) results for 4 languages
+        - Syntactic accuracy improves across the board
+        - Semantic accuracy does not improve for any
+            - BUT results on Czech improve the most overall
+        - Generally fasttext does not beat baselines in terms of accuracy
+            - BUT it is extremely fast
+            
+
+Data science engineering
+    - Jupyter notebooks suck
+        
+
