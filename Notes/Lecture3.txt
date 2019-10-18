@@ -1,0 +1,49 @@
+CNNs
+- Take features and rotate them in space - if you know how to detect a feature in one place, you will be able to find it in another
+    - These are called "convolutions"
+- Allows for less training data & parameters b/c you reuse features
+- Filters, or kernels, are learned features
+    - Learned via backpropogations
+    - Box with padding ('kernel') roves around identifying features in different areas of the layer
+- Max pooling
+    - Retrieves the max value in the area covered by the kernel
+    - This is a form of dimensionality reduction - keeps only important features
+    - Max pooling works better than average pooling
+    - This results in a single input to the next layer for the kernel
+- Parts of a CNN
+    - Vectorized input
+    - Convolutional layers with multiple filter widths and feature maps
+    - Max-over-time pooling
+    - Fully connected layer with softmax output (probabilities) and dropout
+    
+RNNs
+- Have loops in them, so information persists - good way to collect lots of info
+    - Hidden states can be nonlinear
+    - Hidden states share parameters so that sentence lengths can vary in testing data
+- Hard to train
+    - RNNs are a feed-forward network where weights must be the same at each layer
+- Great for NLP
+- Cycles represent the influence of a present variable value on its own value at a future time
+    - This allows the model to operate at all time points, rather than having a separate model for each time step
+    
+Exploding & vanishing gradient problem
+- NN forward pass: we use the squashing function (e.g. the logistic function) to prevent the activities from exploding. 
+- NN backward pass: if you double the error derivatives at the final layer, all network error derivatives will double. A linear system.
+- Backpropagation through many layers: if the weights are small, the gradients will shrink exponentially; if the weights are big, the gradients will grow exponentially.
+- NNs typically don’t have many hidden layers. In RNNs, however, the hidden states are all connected. Not possible to train 100-step RNN (the gradients will explode or vanish). RNNs cannot handle long-range dependencies.
+
+
+LSTMs
+- Special case of RNNs that ARE able to handle long-term dependencies
+- They select what to keep in each state using "gates"
+- Kinds of LSTMs
+    - Gated Recurrent Unit (GRU) networks only have 2 kinds of gates. Much simpler and more efficient, less flexible.
+    - Bidirectional (bi-LSTM or bi-GRU) - have backward and forward connections in the hidden layers. Good for NLP.
+    
+    
+    
+Word2Vec
+- A single, context-independent representation of each word
+
+
+    

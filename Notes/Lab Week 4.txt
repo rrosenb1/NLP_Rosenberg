@@ -1,0 +1,15 @@
+Bert questions 4 and 5
+4. What makes Bert different from skip-gram? What tasks are they trying to solve?
+5. What are the advantages of pre-training?
+6. Which fine-tuning tasks may cause bert to seem less robust?
+
+Bonus:
+7. Would you call Elmo a language model? Why or why not?
+8. What is the advantage of the architecture of bert compared to the one of elmo?
+
+
+Skip-gram is mostly non-contextual (only in the sense that you train it on the whole corpus).
+    - Skip-gram produces a word representation that is helpful when you are trying to predict words that surround it.
+    - When you are using the model, it doesn't matter where in the sentence or corpus a word occurs.
+BERT is more contextual and pays attention to the sentence around a word, and can answer questions.
+    - Very contextual and highly dependent on the transform - very complicated to implement
