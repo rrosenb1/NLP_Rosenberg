@@ -1,0 +1,88 @@
+Homework 1 Discussion
+
+Text classification: SVM and Fasttext recap
+    - She is disappointed in us for not reading the SVM or FastText papers
+
+Deep learning for NLP: common regularization and optimization techniques
+    - Bias/Variance tradeoff
+        - High variance overfits
+        - High bias underfits
+        - Low bias, low variance is the "just right" place that you want to be
+    - Bias/variance in DL
+        - In DL this "tradeoff" doesn't really exist 
+        - Having a big dataset and a bigger, deeper network helps with both
+    - Improving DL performance
+        - Whole bunch of optimization algorithms
+        - Optimization speeds the learning of the network (helps with underfitting)
+        - Establish a human baseline to see how difficult the classification task actually is
+        - Regularization techniques
+            - L1: Lasso
+            - L2: Ridge
+          Keeping coefficients small helps spread "knowledge" around the variables
+        - A network with small weights is simpler than one with large weights
+            - L2 weights prevent overfitting
+            - L2 weight penalty keeps weights small
+        - Dropout
+            - Randomly eliminate a portion of nodes in each training layer
+            - Dropout rate is a parameter that you should really pay attention to tuning!
+            - DON't do dropout during testing, BUT
+            - You want to do "inverted dropout" 
+                - Pick a keep_probability for training (e.g. 0.8)
+                - In testing, activations of layers w dropout are scaled by the keep_probability value
+            - Very widely used. Performs very well.
+            - Prevents the network from relying on a single feature / set of features
+                - Similar to L2 regularization
+                - Can (should!) use both at the same time
+            - Tuning can be overwhelming bc you have SO MANY hyperparameters
+                - Different dropout for different layers, etc
+                - In practice, find a publication that did a similar thing and use that to start
+    - NN Regularization vs Optimization
+        - Mini-batch gradient descent
+            - In full batch, you use your full set of training data
+            - Mini-batch is "stochastic gradient descent" and the cost oscillates much more
+            - Mini-batch introduces randomness
+            - Helps bc less computation is used for updating weights
+                - Very efficient to tune, esp on GPUs
+                - CompSci optimization more than anything else
+            - Commonly use batch sizes of 32 - 128
+            - Batches need to be balanced
+            - Towards the end of training, need to reduce learning rate
+        - Exponentially-weighted moving average (EWMA)
+            - Smooth data points by creating a series of averages of different subsets of the data set
+        - Gradient Descent with Momentum
+            - Compute EWMA of gradients (momentum) - use that avg to update network weights
+            - Puts more weight on more recent gradients compared to less recent ones
+            - Works well for both full and mini-batch learning
+            - Explained
+                - Imagine a ball on the error surface 
+                - It starts by following the gradient, but does not do steepest descent when it has velocity
+                - Momentum keeps it going in its previous direction
+            - Equations are simple
+        - RMSProp = Root Mean Square Propogation
+            - Introduced by Geoffrey Hinton on Coursera
+                - Widely used but unpublished optimization technique
+            - Removes need to increase learning rate
+            - Suitable for mini-batch learning
+            
+
+Word-level CNN for text classification
+    - Used pre-trained word2vec embeddings
+        - Static
+        - Nonstatic (modified based on specific task)
+    - Text represented as a sequence of N words
+        - Pad or truncate as needed
+    - Example in Keras
+
+Homework 3 Discussion
+    - Due in 2 weeks and is long!
+        - Submit exactly 1 text or pdf file
+    - Need to have at least 500,000 examples (Yelp or Amazon reviews datasets are good)
+    - Summary stats
+        - Exactly what she wrote
+        
+
+Sentiment Analysis
+
+NLP for Social Media
+
+Chat bots, Dialog Systems, Question Answering
