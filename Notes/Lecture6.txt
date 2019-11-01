@@ -1,0 +1,40 @@
+Topics today
+    - NLP in Industry
+    - REST to make an API from your model
+    - Docker containers
+    - mlflow
+    - Licensing and data usage agreement considerations
+    
+    
+Information Extraction
+    - Take out pieces of the free text, like phone numbers, important names, etc
+        - Turn free-form text into structured or semi-structured data
+    - You have some data to start with - create a bunch of rules for pulling things out
+    - Intra-annotator agreement
+        - Measure of how good the data set is and how good the model is
+        - All of the major datasets were created by hand (esp in medical world)
+            - This measures how much subjectivity and ambiguity there was in annotating it
+            - Multiple people will annotate each paper - for the same text, what is precision/recall/f1?
+            - One annotator considered gold standard, another considered the test set
+        - In this slide, for the orange text, there are 4 true positives, 0 false positives
+            - 4 false negatives, many true negatives 
+            - Math on the next slide
+            - Which annotator is test/gold standard doesn't really matter
+        - Cohen's Kappa is a measure of this
+            - 0.78 is a pretty good value
+            - Negative value is just noise - no agreement
+            - Anything above 0.6 is useful, good-quality data
+            - Anything above 0.8 is perfect
+    - Checked out for a bit: the new moral of the story is that, if you have a small dataset, DL is not the move
+        - Fancy neural nets and LSTMs or SVMs actually give really bad results for small data
+        
+        
+Relation Extraction
+    - Many supervised ML approaches, done in two steps
+        1. Named entity recognition
+        2. Relation classification applies
+    - Performance is not great in this pipeline approach
+        - It is much more complicated than this!
+        
+    
+    
