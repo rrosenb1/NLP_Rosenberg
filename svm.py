@@ -1,23 +1,19 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[167]:
-
-
 import os
 import gensim
 import string
 import nltk
 import itertools
 import json
-import pandas as pd
 import gzip
+import pandas as pd
+import numpy as np
 
 from nltk.stem.porter import PorterStemmer
 from string import digits
 from statistics import mean 
 from nltk.corpus import stopwords
 from collections import Counter
+from prettytable import PrettyTable
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split
@@ -30,268 +26,68 @@ from sklearn import model_selection, naive_bayes, svm
 import warnings
 warnings.filterwarnings("ignore", category=FutureWarning)
 
+# Get on GPU
+# Fix tensorflow GPU allocation
 
-# In[144]:
-
-
-def parse(path):
-    g = gzip.open(path, 'rb')
-    for l in g:
-        yield json.loads(l)
-
-def getDF(path):
-    i = 0
-    df = {}
-    for d in parse(path):
-        df[i] = d
-        i += 1
-    return pd.DataFrame.from_dict(df, orient='index')
-
-df = getDF('All_Beauty_5.json.gz')
-# df = getDF('Books_5.json.jz')
-df.head()
+#%% GPU memory fix
+# import tensorflow as tf
+# from tensorflow import keras
+# def get_session(gpu_fraction=0.25):    
+#     gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=gpu_fraction, allow_growth=True)    
+#     return tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
+# keras.backend.set_session(get_session())
 
 
-# In[145]:
-
-
-# Cut size of df down if necessary
-if len(df) > 500000:
-    df = df[:500000]
-
-
-# In[146]:
-
-
-df = df[['overall', 'reviewText']]
-df['reviewText'] = df['reviewText'].fillna("")
-
-
-# In[147]:
-
-
-df['label'] = [1 if x >= 3 else 0 for x in df['overall']]
-df.head(10)
-
-
-# In[148]:
-
-
-# Clean & normalize dataset
-# normalization (e.g. convert to lowercase, remove non-alphanumeric chars, numbers,
-textdata = df['reviewText']
-
-def strip(textdata):
-    textdata_stripped = []
-
-    for l in textdata:
-        # split into words by white space
-        words = l.split()
-        # remove punctuation from each word
-        table = str.maketrans('', '', string.punctuation)
-        textdata_stripped.append([w.translate(table) for w in words])
-    
-    return textdata_stripped
-
-def to_lower(textdata):
-    textdata_lower = []
-    
-    for l in textdata:
-        # convert to lower case
-        textdata_lower.append([word.lower() for word in l])
-    
-    return textdata_lower
-
-def rm_stopwords(textdata):
-    # filter out stop words
-    words = []
-    stop_words = set(stopwords.words('english'))
-    
-    for l in textdata:
-        words.append([word for word in l if not word in stop_words])
-    
-    return words
-
-def rm_numbers(textdata):
-    words = []
-    remove_digits = str.maketrans('', '', digits)
-    
-    for l in textdata:
-        words.append([word.translate(remove_digits) for word in l])
-    
-    return words
-    
-def stem_words(textdata):
-    words = []
-    porter = PorterStemmer()
-    
-    for l in textdata:
-        words.append([porter.stem(word) for word in l])
-
-    return words
-
-textdata = strip(textdata)
-print("Removed punctuation. New length =", len(textdata))
-textdata = to_lower(textdata)
-print("Converted to lowercase. New length =", len(textdata))
-textdata = rm_stopwords(textdata)
-print("Removed stopwords. New length =", len(textdata))
-textdata = rm_numbers(textdata)
-print("Removed numbers. New length =", len(textdata))
-textdata = stem_words(textdata)
-print("Stemmed words. New length =", len(textdata))
-
-print(textdata[0:30])
-
-
-# In[149]:
-
-
-df['reviews_cleaned'] = textdata
-df['reviews_cleaned'] = df.reviews_cleaned.apply(' '.join)
-df = df[['label', 'reviews_cleaned']]
-df.head()
-
-
-# In[151]:
-
-
-# Check for class imbalance
-print('Label = 0: ', df[df['label'] == 1].shape) # these are good reviews
-print('Label = 1: ', df[df['label'] == 0].shape) # these are bad reviews
-# There is major class imbalance - will need to balance later
-
-
-# In[152]:
-
-
-def get_tfidf(df = df, ngram_range = (1, 2), min_df = 500):
+def get_tfidf(df, min_df = 500, ngram_range = (1, 2)):
     '''Get tfidf vectors for the cleaned labels in the dataframe.'''
     
     tfidf = TfidfVectorizer(sublinear_tf = True, 
                             min_df = min_df, 
+                            max_features = 500,
                             norm = 'l2', 
                             encoding = 'latin-1', 
-                            ngram_range = (1, 2), 
+                            max_df = 0.3,
+                            binary = True,
+                            ngram_range = ngram_range, 
                             stop_words = 'english')
-    
-    features = tfidf.fit_transform(df.reviews_cleaned).toarray()
+
+    features = tfidf.fit_transform(df.reviews_cleaned.tolist())
     labels = df.label
     print("Number of features:", features.shape[1]) 
     
     return features, labels, tfidf
 
-
-# In[153]:
-
-
 def T_T_split(features, labels):
     X_train, X_test, y_train, y_test = train_test_split(
                                         features, 
                                         labels, 
-                                        test_size=0.33, #)
-                                        random_state=42)
+                                        test_size=0.33)
+    
     return X_train, X_test, y_train, y_test
 
+def fit_svm(df, model_name, min_df, ngram_range, kernel = 'linear'):
 
-# In[164]:
-
-
-def fit_logistic(df, model_name, ngram_range = (1, 2), min_df = 500, fit_bool = True):
-    features, labels, tfidf = get_tfidf(df, ngram_range, min_df)
-    X_train, X_test, y_train, y_test = T_T_split(features, labels)
+    print("Running", model_name, "with parameters ngram_range = ", ngram_range, "and min_df = ", min_df)
+    print(" ")
     
-    model = LogisticRegression(random_state = 0,
-                               class_weight = 'balanced')
-    if fit_bool:
-        model.fit(X_train, y_train)
+    if df.shape[0] > 100000:
+        df = df.sample(n=100000, replace = True, random_state=1)
 
-    CV = 10
-    cv_df = pd.DataFrame(index = range(CV))
-
-    accuracy = cross_val_score(model, 
-                               X_train, 
-                               y_train, 
-                               scoring = 'accuracy', 
-                               cv = CV)
-    roc = cross_val_score(model, 
-                               X_train, 
-                               y_train, 
-                               scoring = 'roc_auc', 
-                               cv = CV)
+    print('Got data loaded - ready for tfidf')
+  
+    features, labels, tfidf = get_tfidf(df, min_df)
     
-    idf = tfidf.idf_
-    feat_importances = dict(zip(tfidf.get_feature_names(), idf))
-    d = Counter(feat_importances)
-
-    y_pred = model.predict(X_train)
-    print("Average accuracy is", round(mean(accuracy), 3))
-    print("Average ROC_AUC is", round(mean(roc), 3))
-    print('Confusion matrix:')
-    print(confusion_matrix(y_train, y_pred)); print(" ")
-    
-    print("ngram_range:", ngram_range)
-    print("min_df:", min_df); print(" ")
-    
-    print("Top 10 most important features:")
-    for k, v in d.most_common(10):
-        print('%s: %i' % (k, round(v, 5)))
-    
-    return model
-
-
-# In[165]:
-
-
-logistic1 = fit_logistic(df, 
-                         'Logistic1',
-                         ngram_range = (1),
-                         min_df = 30)
-
-
-# In[166]:
-
-
-logistic2 = fit_logistic(df,
-                        'Logistic2',
-                         ngram_range = (1, 2),
-                         min_df = 30)
-
-
-# In[107]:
-
-
-logistic3 = fit_logistic(df,
-                        'Logistic3',
-                         ngram_range = (1, 3),
-                         min_df = 30)
-
-
-# In[108]:
-
-
-logistic4 = fit_logistic(df,
-                        'Logistic4',
-                         ngram_range = (1, 4),
-                         min_df = 300)
-
-
-# In[173]:
-
-
-def fit_svm(df, model_name, min_df = 50, fit_bool = True):
-    features, labels, tfidf = get_tfidf(df, ngram_range, min_df)
     X_train, X_test, y_train, y_test = T_T_split(features, labels)
     
     model = svm.SVC(C = 1.0, 
-                    kernel = 'linear', 
+                    kernel = kernel, 
                     degree = 3, 
                     gamma = 'auto',
                     class_weight = 'balanced')
-    if fit_bool:
-        model.fit(X_train, y_train)
+    
+    model.fit(X_train, y_train)
 
-    CV = 10
+    CV = 5
     cv_df = pd.DataFrame(index = range(CV))
 
     accuracy = cross_val_score(model, 
@@ -299,6 +95,7 @@ def fit_svm(df, model_name, min_df = 50, fit_bool = True):
                                y_train, 
                                scoring = 'accuracy', 
                                cv = CV)
+
     roc = cross_val_score(model, 
                                X_train, 
                                y_train, 
@@ -321,18 +118,39 @@ def fit_svm(df, model_name, min_df = 50, fit_bool = True):
     print("Top 10 most important features:")
     for k, v in d.most_common(10):
         print('%s: %i' % (k, round(v, 5)))
+
+    print(" ")
     
-    return model
+    return model, mean(accuracy), mean(roc)
 
 
-# In[174]:
+if __name__ == "__main__":
+    df = pd.read_csv("home_and_kitchen_ready_to_model.csv")
+    df = df[['label', 'reviews_cleaned']]
+    df.dropna(inplace=True)
+    print('Pulled dataframe from file.'); print(" ")
+
+    model_names = ['SVM1', 'SVM2', 'SVM3', 'SVM4', 'SVM5', 'SVM6', 'SVM7', 'SVM8']
+    ngram_ranges = [(1,1), (1,2), (1,1), (1,2), (1,1), (1,2), (1,1), (1,2)] 
+    kernel_values = ['linear', 'rbf', 'linear', 'rbf', 'linear', 'rbf', 'linear', 'rbf']
+    min_df_values = [500, 500, 500, 500, 200, 200, 200, 200]
+    
+    tab = PrettyTable()
+    tab.field_names = ["Model Name", "Min_Df", "Ngram_Range", "Penalty", "Accuracy", "ROC"]
+
+    num_models = 1
+
+    for i in range(0, num_models):
+        model, acc, roc = fit_svm(df, 
+                                       model_name = model_names[i],
+                                       min_df = min_df_values[i],
+                                       ngram_range = ngram_ranges[i],
+                                       kernel = kernel_values[i])
+        
+        tab.add_row[model_names[i], min_df_values[i], ngram_ranges[i], kernel_values[i], acc, roc]
+    
+    print(tab)
 
 
-fit_svm(df, 'SVM1', min_df = 50) # accuracy is about 0.98 with min_df = 50 and about 0.75 with min_df = 500
 
-
-# In[ ]:
-
-
-
-
+# %%

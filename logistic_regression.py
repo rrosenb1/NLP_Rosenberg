@@ -38,93 +38,6 @@ from sklearn import model_selection, naive_bayes, svm
 import warnings
 warnings.filterwarnings("ignore", category=FutureWarning)
 
-def parse(path):
-    g = gzip.open(path, 'rb')
-    for l in g:
-        yield json.loads(l)
-
-def getDF(path):
-    i = 0
-    df = {}
-    for d in parse(path):
-        df[i] = d
-        i += 1
-    return pd.DataFrame.from_dict(df, orient='index')
-
-def strip(textdata):
-    textdata_stripped = []
-
-    for l in textdata:
-        # split into words by white space
-        words = l.split()
-        # remove punctuation from each word
-        table = str.maketrans('', '', string.punctuation)
-        textdata_stripped.append([w.translate(table) for w in words])
-    
-    return textdata_stripped
-
-def to_lower(textdata):
-    textdata_lower = []
-    
-    for l in textdata:
-        # convert to lower case
-        textdata_lower.append([word.lower() for word in l])
-    
-    return textdata_lower
-
-def rm_numbers(textdata):
-    words = []
-    remove_digits = str.maketrans('', '', digits)
-    
-    for l in textdata:
-        words.append([word.translate(remove_digits) for word in l])
-    
-    return words
-    
-def stem_words(textdata):
-    words = []
-    porter = PorterStemmer()
-    
-    for l in textdata:
-        words.append([porter.stem(word) for word in l])
-
-    return words
-
-def new_df(path):
-    print('Pulling and cleaning dataframe from', path)
-    df = getDF(path)
-
-    # Cut size of df down if necessary
-    if len(df) > 500000:
-        df = df[:500000]
-
-    df = df[['overall', 'reviewText']]
-    df['reviewText'] = df['reviewText'].fillna("")
-    df['label'] = [1 if x >= 3 else 0 for x in df['overall']]
-
-    # Clean & normalize dataset
-    # normalization (e.g. convert to lowercase, remove non-alphanumeric chars, numbers,
-    textdata = df['reviewText']
-
-    print("Made it to data cleaning")
-    textdata = strip(textdata); print("stripped")
-    textdata = to_lower(textdata); print("all lowercase")
-    textdata = rm_numbers(textdata); print('removed numbers')
-    textdata = stem_words(textdata); print('stemmed words')
-
-    df['reviews_cleaned'] = textdata
-    df['reviews_cleaned'] = df.reviews_cleaned.apply(' '.join)
-    df = df[['label', 'reviews_cleaned']]
-
-    # Check for class imbalance
-    print('Label = 0: ', df[df['label'] == 1].shape) # these are good reviews
-    print('Label = 1: ', df[df['label'] == 0].shape) # these are bad reviews
-    print('There is major class imbalance - will need to balance later'); print(" ")
-
-    print("Finished cleaning data. Saving to file.")
-    df.to_csv('home_and_kitchen_ready_to_model.csv')
-
-    return df
 
 def get_tfidf(df, min_df, ngram_range, penalty):
     '''Get tfidf vectors for the cleaned labels in the dataframe.'''
@@ -208,14 +121,10 @@ def fit_logistic(df, model_name, min_df, ngram_range, penalty):
 
 
 if __name__ == "__main__":
-    try:
-        df = pd.read_csv('home_and_kitchen_ready_to_model.csv')
-        df = df[['label', 'reviews_cleaned']]
-        df.dropna(inplace=True)
-        print('Pulled dataframe from file.')
-    except:
-        print('Pulling and cleaning dataset from scratch')
-        df = new_df('reviews_Home_and_Kitchen_5.json.gz')
+    df = pd.read_csv("home_and_kitchen_ready_to_model.csv")
+    df = df[['label', 'reviews_cleaned']]
+    df.dropna(inplace=True)
+    print('Pulled dataframe from file.'); print(" ")
 
     model_names = ['Logistic1', 'Logistic2', 'Logistic3', 'Logistic4', 'Logistic5', 'Logistic6', 'Logistic7', 'Logistic8']
     ngram_ranges = [(1,1), (1,2), (1,1), (1,2), (1,1), (1,2), (1,1), (1,2)] 
