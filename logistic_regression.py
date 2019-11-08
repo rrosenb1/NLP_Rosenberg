@@ -119,8 +119,7 @@ def fit_logistic(df, model_name, min_df, ngram_range, penalty):
     
     return model, round(mean(accuracy), 3), round(mean(roc), 3)
 
-
-if __name__ == "__main__":
+def logistic_runner():
     df = pd.read_csv("home_and_kitchen_ready_to_model.csv")
     df = df[['label', 'reviews_cleaned']]
     df.dropna(inplace=True)
@@ -146,6 +145,11 @@ if __name__ == "__main__":
         tab.add_row([model_names[i], min_df_values[i], ngram_ranges[i], penalty_values[i], acc, roc])
     
     print(tab)
+
+
+if __name__ == "__main__":
+    
+    logistic_runner()
 
 '''
 #####_____Results_____#####

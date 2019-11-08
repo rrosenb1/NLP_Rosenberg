@@ -123,8 +123,26 @@ def fit_svm(df, model_name, min_df, ngram_range, kernel = 'linear'):
     
     return model, mean(accuracy), mean(roc)
 
+def svm_runner():
+    df = pd.read_csv("home_and_kitchen_ready_to_model.csv")
+    
+    df = df[['label', 'reviews_cleaned']]
+    df.dropna(inplace=True)
+    print('Pulled dataframe from file.'); print(" ")
+
+    model, acc, roc = fit_svm(df, 
+                                model_name = 'best_svm',
+                                min_df = 200,
+                                ngram_range = (1, 2),
+                                kernel = 'rbf')
+        
+    return 
+
+
+
 
 if __name__ == "__main__":
+
     df = pd.read_csv("home_and_kitchen_ready_to_model.csv")
     df = df[['label', 'reviews_cleaned']]
     df.dropna(inplace=True)
