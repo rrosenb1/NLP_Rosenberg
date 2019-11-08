@@ -73,9 +73,9 @@ def model_accuracy(model, model_name):
         
     eq = test_labels == pred_labels
         
-    acc = round(eq.sum() / len(test_labels), 3)
+    acc = round(eq.sum() / len(test_labels), 5)
         
-    print("Accuracy: " + str(round(eq.sum() / len(test_labels), 3)))
+    print("Accuracy: " + str(round(eq.sum() / len(test_labels), 5)))
     print(confusion_matrix(test_labels, pred_labels))
         
     return acc
@@ -162,7 +162,7 @@ if __name__ == "__main__":
 
     num_models = 8
 
-    for i in range(0, num_models):
+    for i in range(0, num_models-1):
 
         model, acc = fit_ft(df, 
                         model_name = model_names[i],
@@ -198,10 +198,13 @@ I used the following parameters identically for all models:
 *   Number of epochs: 25 - this sped up processing some and allowed for rapid iteration, which I valued greatly.
 *   Used the same dataset and sample size for each model - 
 
-All models performed decently well, with accuracies above 0.9. The best-performing model on both metrics used L2 regularization, a feature size of 500, and 2 ngrams. 
-This is likely because the model was given more information to work with (both with bigrams and more features) and L2 regularization was used to cut the model to include only useful features. 
-Overall, the model could likely be improved upon if I used more features, more n-grams, and a lower max_df, but all of these things would increase training time too much to be scalable.'''
+All models performed decently well, with accuracies in the 90%s. The best-performing model on both metrics used:
+    - Bigrams (wordNgrams = 2)
+    - Learning_Rate = 0.3
+    - min_df_values = 10
+    . This model had an accuracy of 0.940.
 
+This is likely because the model was given more information to work with (both with bigrams and more features) and the decreased learning rate.
+Learning rate determines how much the model changes after each iteration; a low learning rate is more precise, but is slower. In this case, the low learning rate avoided large swings in learning direction and resulted in a more accurate model. 
+Overall, the model could likely be improved upon if I used more features, more n-grams, and a lower max_df, but the accuracy is already very high and the amount of increased performance possible requires further experimentation.'''
 
-
-'''

@@ -136,7 +136,7 @@ if __name__ == "__main__":
 
     num_models = 8
 
-    for i in range(0, num_models):
+    for i in range(0, num_models-1):
         model, acc, roc = fit_logistic(df, 
                                        model_name = model_names[i],
                                        min_df = min_df_values[i],
@@ -161,7 +161,6 @@ I took the following preprocessing steps:
 
 I used the following parameters identically for all models:
 
-
 *   Classes balanced. I did not want the model to predict based on the probability of a positive review, so I set class_weights to balanced in the Logistic Regression parameters.
 *   Latin encoding. All 
 *   Max_DF of 0.3 (threshold for ignoring corpus-specific stop words) - I set this value fairly low because I did not want to ignore too many words. Since this is a very varied dataset, there will be many words that are important to context and also are repeated many times.
@@ -170,25 +169,3 @@ I used the following parameters identically for all models:
 All models performed decently well, with accuracies ranging from 0.73 to 0.81 and ROC values ranging from 0.83 to 0.89. The best-performing model on both metrics used L2 regularization, a feature size of 500, and 2 ngrams. 
 This is likely because the model was given more information to work with (both with bigrams and more features) and L2 regularization was used to cut the model to include only useful features. 
 Overall, the model could likely be improved upon if I used more features, more n-grams, and a lower max_df, but all of these things would increase training time too much to be scalable.'''
-
-"""For this experiment I varied the number of ngrams (1 or 2), the penalty or norm (L1 or L2) used in regularization, and the Min_DF for TF-IDF, which controls the number of features created. I used Accuracy and ROC score for my reporting metrics - Accuracy because I want to know how the model performs as far as the misclassification rate, and ROC because it is a measure of how well the model performs on an unbalanced dataset, and this dataset was fairly unbalanced with more positive (3+ star) reviews than negative (1-2 star) reviews.
-
-I took the following preprocessing steps:
-*   Labelling reviews with 3+ stars "positive" (1) and reviews with 1 or 2 stars "negative" (0).
-*   Removing all numbers from the text
-*   Removing all punctuation from the text
-*   Removing all stopwords (English) from the text
-*   Stemming all words
-
-I used the following parameters identically for all models:
-
-
-*   Classes balanced. I did not want the model to predict based on the probability of a positive review, so I set class_weights to balanced in the Logistic Regression parameters.
-*   Latin encoding. All 
-*   Max_DF of 0.3 (threshold for ignoring corpus-specific stop words) - I set this value fairly low because I did not want to ignore too many words. Since this is a very varied dataset, there will be many words that are important to context and also are repeated many times.
-*   Binary = False (items are counted in the number that they appear). Since there will be some important words that are used very few times, I didn't want them to be overshadowed (or considered equal to) words that are less important but used many times.
-
-All models performed decently well, with accuracies ranging from 0.73 to 0.81 and ROC values ranging from 0.83 to 0.89. The best-performing model on both metrics used L2 regularization, a feature size of 500, and 2 ngrams. 
-This is likely because the model was given more information to work with (both with bigrams and more features) and L2 regularization was used to cut the model to include only useful features. 
-Overall, the model could likely be improved upon if I used more features, more n-grams, and a lower max_df, but all of these things would increase training time too much to be scalable.
-"""
