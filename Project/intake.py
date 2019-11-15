@@ -5,6 +5,7 @@ import nltk
 import itertools
 import random
 import glob
+import re
 
 import pandas as pd
 import numpy as np
@@ -35,11 +36,6 @@ def retrieve_data(end_len):
                     files_parsed += 1
         except:
             pass
-    print(len(gender))
-    print(len(age))
-    print(len(category))
-    print(len(star_sign))
-    print(len(textdata))
 
     df = pd.DataFrame({"Text": textdata, 
                        "Gender": gender,
@@ -53,12 +49,53 @@ def retrieve_data(end_len):
     
     return(df[:end_len])
 
+def split_text(text, i):
+
+    s = "<date>.*</date>\n<post>"
+    replaced = re.sub(s, '###', text[i])
+    replaced = re.sub(r"\n", '', replaced)
+    replaced = re.sub(r"\t", '', replaced)
+    replaced = re.sub(r"</post>", '', replaced)
+    replaced = re.sub(r"<Blog>", '', replaced)
+    replaced = re.sub(r"</Blog>", '', replaced)
+
+    user_text = replaced.split("###")
+    
+    return user_text
+
+def create_user_df(line, i):
+    
+    user_text = split_text(line['Text'].astype('str'), i)
+
+    # Create dataframe of repeated rows for the user
+    user_df = pd.DataFrame(np.repeat(line.values, len(user_text), axis = 0), columns = df.columns)
+    user_df['Posts'] = user_text
+    user_df = user_df[['Gender', 'Age', 'Category', 'StarSign', 'Posts']]
+        
+    return user_df
+
+def create_long_df(df):
+
+    df_long = create_user_df(df.iloc[[0]], 0)
+
+    for i in range(1, len(df)):
+        line = df.iloc[[i]]
+        user_df = create_user_df(line, i)
+        user_df.head()
+        
+        df_long = df_long.append(user_df)
+        
+    df_long = df_long.reset_index()
+    
+    return df_long
 
 
 if __name__ == '__main__':
-    df = retrieve_data(10)
+    df = retrieve_data(100)
     print("Retrieved", len(df), "documents from folder.")
     print("Saving to working directory as df.csv.")
-    print(df.head(10))
 
-    df.to_csv("df.csv")
+    df_long = create_long_df(df)
+    print(df_long.shape)
+
+    df_long.to_csv("df.csv")
