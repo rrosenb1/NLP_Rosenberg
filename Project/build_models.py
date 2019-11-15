@@ -50,7 +50,7 @@ def get_tfidf(df, min_df, ngram_range, penalty):
                             ngram_range = ngram_range, 
                             stop_words = 'english')
 
-    features = tfidf.fit_transform(df.text_cleaned.tolist())
+    features = tfidf.fit_transform(df.text_cleaned.astype('U').tolist())
     labels = df.Label
     print("Number of features:", features.shape[1]) 
     
@@ -60,7 +60,7 @@ def T_T_split(features, labels):
     X_train, X_test, y_train, y_test = train_test_split(
                                         features, 
                                         labels, 
-                                        test_size=0.33 #random_state = 43
+                                        test_size=0.33
                                         )
     
     return X_train, X_test, y_train, y_test
@@ -126,10 +126,10 @@ if __name__ == '__main__':
     # Intake or Create Cleaned Data
     try:
         print("Pulling dataframe from working directory.")
-        df = pd.read_csv("Project/df_ready_to_model.csv")
+        df = pd.read_csv("df_ready_to_model.csv")
     except:
         print("Running intake script.")
-        df = intake.retrieve_data(1000)
+        df = retrieve_data(1000)
         df = clean.clean(df)
 
     X_train, X_test, y_train, y_test = preprocess(df, min_df = 50, ngram_range= (1, 3), penalty = "l1") # **config_build_models

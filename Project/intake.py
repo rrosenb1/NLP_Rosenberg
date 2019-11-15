@@ -43,9 +43,6 @@ def retrieve_data(end_len):
                        "Category": category,
                        "StarSign": star_sign
                        }).reset_index()
-
-    print(files_parsed, "files parsed.")
-    print("Returning first", end_len, "files.")
     
     return(df[:end_len])
 

@@ -59,15 +59,9 @@ def stem_words(textdata):
 
 def clean(df):
 
-    df = df[['Text', 'Label']]
-    df['Text'] = df['Text'].fillna("")
-    # df['label'] = [1 if x >= 3 else 0 for x in df['overall']] # group labels
+    df = df[['Posts', 'Label']].dropna()
+    textdata = df['Posts']
 
-    # Clean & normalize dataset
-    # normalization (e.g. convert to lowercase, remove non-alphanumeric chars, numbers,
-    textdata = df['Text']
-
-    print("Made it to data cleaning")
     textdata = strip(textdata); print("stripped")
     textdata = to_lower(textdata); print("all lowercase")
     textdata = rm_numbers(textdata); print('removed numbers')
@@ -82,11 +76,45 @@ def clean(df):
 
     return df
 
+def create_label(df):
+
+    def f(row):
+        if row['StarSign'] == 'Aries':
+            val = 'Fire'
+        elif row['StarSign'] == 'Sagittarius':
+            val = 'Fire'
+        elif row['StarSign'] == 'Leo':
+            val = 'Fire'
+        elif row['StarSign'] == 'Taurus':# | row['StarSign'] == 'Virgo' | row['StarSign'] == 'Capricorn'):
+            val = 'Earth'
+        elif row['StarSign'] == 'Virgo':
+            val = 'Earth'
+        elif row['StarSign'] == 'Capricorn':
+            val = 'Earth'
+        elif row['StarSign'] == 'Gemini': #| row['StarSign'] == 'Libra' | row['StarSign'] == 'Aquarius'):
+            val = 'Air'
+        elif row['StarSign'] == 'Libra':
+            val = 'Air'
+        elif row['StarSign'] == 'Aquarius':
+            val = 'Air'
+        elif row['StarSign'] == 'Cancer':# | row['StarSign'] == 'Scorpio' | row['StarSign'] == 'Pisces'):
+            val = 'Water'
+        elif row['StarSign'] == 'Scorpio':
+            val = 'Water'
+        elif row['StarSign'] == 'Pisces':
+            val = 'Water'
+        return val
+
+    df['Label'] = df.apply(f, axis=1)
+
+    return df
+
 if __name__ == '__main__':
     try:
-        df = pd.read_csv("Project/df.csv")
+        df = pd.read_csv("df.csv")
     except:
         df = intake.retrieve_data(1000)
 
-    df_cleaned = clean(df)
-    print(df.head())
+    df_labelled = create_label(df)
+    df_cleaned = clean(df_labelled)
+    print(df_cleaned.head())
