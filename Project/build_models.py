@@ -5,7 +5,7 @@ import nltk
 import itertools
 import json
 import gzip
-# import yaml
+import yaml
 
 import pandas as pd
 import numpy as np

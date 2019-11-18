@@ -59,9 +59,12 @@ def stem_words(textdata):
 
 def clean(df):
 
+    df = create_label(df)
+
     df = df[['Posts', 'Label']].dropna()
     textdata = df['Posts']
 
+    print("Made it to data cleaning")
     textdata = strip(textdata); print("stripped")
     textdata = to_lower(textdata); print("all lowercase")
     textdata = rm_numbers(textdata); print('removed numbers')
@@ -115,6 +118,5 @@ if __name__ == '__main__':
     except:
         df = intake.retrieve_data(1000)
 
-    df_labelled = create_label(df)
-    df_cleaned = clean(df_labelled)
+    df_cleaned = clean(df)
     print(df_cleaned.head())
