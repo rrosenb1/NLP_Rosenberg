@@ -20,7 +20,7 @@ def retrieve_data(end_len):
     userid = []; age = []; gender = []; category = []; star_sign = []
     files_parsed = 0
 
-    for filename in glob.glob(str(path))[:end_len]:
+    for filename in glob.glob(str(path))[:end_len*5]:
         try:
             with open(str(filename), 'r') as f:
                 attributes = filename.split('.')
@@ -44,7 +44,9 @@ def retrieve_data(end_len):
                        "StarSign": star_sign
                        }).reset_index()
     
-    return(df[:end_len])
+    df = df.sample(n = end_len).reset_index() # randomly sample N rows from dataframe
+
+    return df
 
 def split_text(text, i):
 
@@ -88,11 +90,11 @@ def create_long_df(df):
 
 
 if __name__ == '__main__':
-    df = retrieve_data(100)
+    df = retrieve_data(5000)
     print("Retrieved", len(df), "documents from folder.")
-    print("Saving to working directory as df.csv.")
+    print("Saving to working directory.")
 
     df_long = create_long_df(df)
     print(df_long.shape)
 
-    df_long.to_csv("df.csv")
+    df_long.to_csv("df_5000.csv")

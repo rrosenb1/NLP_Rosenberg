@@ -9,6 +9,7 @@ import pandas as pd
 import numpy as np
 
 from nltk.stem.porter import PorterStemmer
+from nltk.stem import WordNetLemmatizer 
 from string import digits
 from statistics import mean 
 from nltk.corpus import stopwords
@@ -16,6 +17,8 @@ from collections import Counter
 from prettytable import PrettyTable
 
 from intake import retrieve_data
+
+# nltk.download('wordnet')
 
 
 def strip(textdata):
@@ -48,12 +51,14 @@ def rm_numbers(textdata):
     
     return words
     
-def stem_words(textdata):
+def lemmatize_words(textdata):
     words = []
-    porter = PorterStemmer()
+    # porter = PorterStemmer()
+  
+    lemmatizer = WordNetLemmatizer() 
     
     for l in textdata:
-        words.append([porter.stem(word) for word in l])
+        words.append([lemmatizer.lemmatize(word) for word in l])
 
     return words
 
@@ -68,14 +73,14 @@ def clean(df):
     textdata = strip(textdata); print("stripped")
     textdata = to_lower(textdata); print("all lowercase")
     textdata = rm_numbers(textdata); print('removed numbers')
-    textdata = stem_words(textdata); print('stemmed words')
+    textdata = lemmatize_words(textdata); print('lemmatized words') # chose lemmatizing bc it is less aggressive + makes more sense
 
     df['text_cleaned'] = textdata
     df['text_cleaned'] = df.text_cleaned.apply(' '.join)
     df = df[['Label', 'text_cleaned']]
 
     print("Finished cleaning data. Saving to file.")
-    df.to_csv('df_ready_to_model.csv')
+    df.to_csv('df_ready_to_model_5000.csv')
 
     return df
 
@@ -114,9 +119,9 @@ def create_label(df):
 
 if __name__ == '__main__':
     try:
-        df = pd.read_csv("df.csv")
+        df = pd.read_csv("df_5000.csv")
     except:
-        df = intake.retrieve_data(1000)
+        df = intake.retrieve_data(5000)
 
     df_cleaned = clean(df)
     print(df_cleaned.head())

@@ -1,0 +1,136 @@
+Clustering
+    - Pretty straightforward - just vectorize and do a normal clustering algorithm
+    - Types
+        - K means - partition into K clusters in which each point belongs to the cluster with the nearest mean
+        - Bag of Words w TF-IDF weighted frequencies is the most common vector type to use
+    - Applications
+        - Summarization, classification, organization + browsing
+
+Topic Modeling: Latent Semantic Analysis/Indexing
+    - Way for dimensionality reduction, similar to PCA
+        - PCA reduces dimensions and is computed with a term covariance matrix (cuts out features with least variance)
+        - LSA is computed with a term-document matix
+    - LSA is based on SVD (linear algebra) and a term-document matrix (tf-idf weighted term frequencies)
+        - Merges dimensions associated with terms that have similar meanings
+        - Darker colors represent higher tf-idf weights
+        - Groups docs that contain similar words, then groups words that occur in similar docs
+            - These are your latent variables
+            - Wiki animation shows this
+        - Corpus is just tf-idf weights (rows) of documents (cols)
+        - Latent components come out to be:
+            - Air, pollution, power, environmental -- docs 0, 14, 15, 8
+            - Illegal, immigration, amnesty, aliens -- docs 10, 11, 2, 1
+        - Can also do this with bigrams (trigrams won't help much)
+    - Still requires a human to interpret the topics
+
+Probabilistic LSA
+    - Similar to LSA, but now you model probabilities that link the documents to words
+    - Each document represented as a mix of concepts weighted by prob
+        - Each word expressed as a topic with a probability
+    - Does not use linear algebra (SVD)
+        - DOES use training for parameter learning
+    - LDA: same thing but with an initial assumption of probabilities
+        - Iterates through documents and topics until it reaches a steady state
+        - You specify a number of topics that you want
+        - Usually works better than LSA
+    - How do you evaluate topics?
+        - Look at them
+        - Evaluate numerically using "Perplexity" - measures degree of uncertainty in assigning topics
+        - Entropy is expected information gained from learning the outcome of a random variable
+        - Can also use perplexity to estimate the optimal number of topics used
+        
+Neural Topic Modeling
+    - Paper called "Neural variational inference for text processing"
+    - Displayed here as four topics (purple circles)
+    
+    
+Text Summarization
+    - Extraction:
+        - Select important passages and repeat them verbatim
+    - Abstraction:
+        - Produce important material in a NEW way - goal is to be concise and to paraphrase
+        - Involved paraphrasing, generalization, reordering
+        - Works similarly to machine translation with a neural model
+            - sequence-to-sequence models, just stripped version of translation model
+            - still used beam search (focus on top 2 hypotheses, expand, then next two, expand, etc)
+            - beam search keeps you from having to make infinite number of predictions
+    - Extractive:
+        - Less complex and less expensive than the others
+        - Able to generate grammatically and syntactically correct summaries
+        - Works by classifying each sentence as either important or not
+    - Neural extractive:
+        - RNN-based sequence model for extractive summarization
+        - Supervised sentence-level classification using a bidirectional GRU
+    - Unsupervised methods
+        - Use term frequency - select sentence with most important words
+        - Can also use LSA or LSI to factorize the sentence term matrix into lower dimensions
+        - Can also use a PageRank-like algorithm
+        - Extractive multi-document summarization
+    - How to evaluate
+        - ROUGE score - overlap of n-grams between the system and reference summaries
+        - ROUGE scores are based on recall
+        - All of these have shortcomings, so f-scores will be low (0.3 to 0.4 at the most)
+        
+Note on statistical significance
+    - H0 is that 2 experiments have the same F score and any variation is due to randomness
+    - Perform K-fold CV to get K samples for both methods, then do a t-test to see if there is significant difference bwen groups
+    
+Multi-task learning
+    - Something like a multi-purpose AI
+        - You can share the same NN with the same weights and use it for multiple related tasks
+        - Successful in NLP because:
+            - Task-specific labelled data is not always available - this allows you to use the same data for related tasks
+            - Need to regularize models via overfitting avoidance, which makes the learned representations more flexible.
+    - May need to fine-tune the same model for new tasks
+        - But this might not be true multi-task - look into this
+    - Great for tasks with little in-domain training data
+        - Datasets with 4k training examples still getting good results - interesting
+
+
+Active Learning
+    - Semi-supervised ML
+        - If an alg can choose the data it wants to learn from, it can do well with less training data
+    - Most commomly uses pool-based sampling
+        - Instances drawn from the pool based on an informativeness measure
+
+
+Noisy datasets
+
+
+Transfer learning + domain adaptation
+    - Transfer learning
+        - Use knowledge gained solving one problem, apply it to another
+    - Domain adaptation
+        - Use knowledge of the same task but apply it to another dataset
+    - Potential DL solutions:
+        - Multitask learning
+        - Domain adaptation
+            - First train on domain X, then use tuned parameters to train on domain Y
+            - Fine-tune parameters for new domains
+        - Parameter initialization
+            - Train on one task, then use those tuned parameters to initialize for another task
+            
+
+
+Course recap
+    - Learn 3 or 4 architectures that are commonly used
+        - Transformers, bi-directional LSTMs, GRUs (2 gates with a special memory cell that allows you to keep info from longer 
+        sequences w/o running into the vanishing gradient problem)
+    - Machine translation
+        - Neural model is a bi-directional LSTM and a sequence-to-sequence model (both from google)
+        - Encoder which transforms input to a fixed length, decoder, sequence-to-sequence which produces a word-by-word output 
+        with softmax
+    - Final exam
+        - Closed book
+        - Main concepts introduced throughout the class
+        - Maybe one A4 handwritten sheet
+        - Compute precision, recall, f-score
+        - text classification 
+        - BOW, TF-IDF
+        - SVMs, what they are + how to use as a baseline
+        - regularization + optimization - watch jeff hinton talks
+        - 
+        
+        
+        
+        
