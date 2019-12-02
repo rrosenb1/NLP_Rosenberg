@@ -6,6 +6,7 @@ import itertools
 import json
 import gzip
 import yaml
+import pickle
 
 import pandas as pd
 import numpy as np
@@ -17,6 +18,7 @@ from nltk.corpus import stopwords
 from collections import Counter
 from prettytable import PrettyTable
 
+from sklearn.preprocessing import MaxAbsScaler
 from sklearn import model_selection, naive_bayes, svm
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split, GridSearchCV
@@ -32,7 +34,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import ParameterGrid
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.svm import SVC
+from sklearn.svm import LinearSVC
 from sklearn.neural_network import MLPClassifier
 
 from intake import retrieve_data
@@ -91,12 +93,16 @@ def multiple_model_runner(df):
 
     X_train, X_test, y_train, y_test = preprocess(df, min_df = 100, ngram_range= (1, 1), penalty = "l2") # **config_build_models
 
+    scaling = MaxAbsScaler().fit(X_train)
+    X_train_scaled = scaling.transform(X_train)
+    X_test_scaled = scaling.transform(X_test)
+
     # Append classifier to preprocessing pipeline for three kinds of models
     # Leave all with default parameters for now - will fit hyperparameters for the best model after
     log_reg = Pipeline(steps=[('classifier', LogisticRegression(class_weight = 'balanced'))])
     clf = Pipeline(steps=[('classifier', DecisionTreeClassifier(class_weight = 'balanced'))])
     rd = Pipeline(steps=[('classifier', RandomForestClassifier(class_weight = 'balanced'))])
-    svm_class = Pipeline(steps=[('classifier', svm.SVC(class_weight = 'balanced'))])
+    svm_class = Pipeline(steps=[('classifier', svm.LinearSVC(class_weight = 'balanced'))])
     knn = Pipeline(steps=[('classifier', KNeighborsClassifier(n_neighbors=4))])
     NN = Pipeline(steps=[('classifier', MLPClassifier(solver='lbfgs', alpha=1e-5, hidden_layer_sizes=(5, 2), random_state=1))])
     
@@ -107,10 +113,11 @@ def multiple_model_runner(df):
 
     for i in range(0, len(model_list)):
         model = model_list[i]
-        model.fit(X_train, y_train)
-        preds = model.predict(X_test)
+
+        model.fit(X_train_scaled, y_train)
+        preds = model.predict(X_test_scaled)
         
-        accuracies.append(model.score(X_test, y_test))
+        accuracies.append(model.score(X_test_scaled, y_test))
         f1s.append(f1_score(y_test, preds, average = 'macro'))
         print(model_names[i]); print(confusion_matrix(y_test, preds))
 
@@ -129,7 +136,7 @@ def fine_tune(df):
 
     model_names, accuracies, f1s = [], [], []
 
-    for i in range(0, 5): #len(parameters)):
+    for i in range(0, len(parameters)):
         X_train, X_test, y_train, y_test = preprocess(df, 
                                                   min_df = parameters[i]['min_df'], 
                                                   ngram_range= parameters[i]['ngram_range'], 
@@ -145,6 +152,10 @@ def fine_tune(df):
         f1s.append(f1_score(y_test, preds, average = 'macro'))
 
     comparison_table(model_names, accuracies, f1s)
+
+    return
+
+def final_model(df):
     '''
     Best model is min_df = 25, ngram_range = (1,2), penalty  = 'l2' with acc = 0.585 and f1 = 0.571
     '''
@@ -164,6 +175,9 @@ def fine_tune(df):
     print('F1 Score:', round(f1_score(y_test, preds, average = 'macro'), 5))
     print("Confusion Matrix:"); print(confusion_matrix(y_test, preds))
 
+    # save the model to disk
+    pickle.dump(model, open('finalized_model.sav', 'wb'))
+
     return
 
 if __name__ == '__main__':
@@ -177,5 +191,12 @@ if __name__ == '__main__':
         df = retrieve_data(1000)
         df = clean.clean(df)
 
-    multiple_model_runner(df)
+    # multiple_model_runner(df)
     # fine_tune(df)
+    final_model(df)
+
+    # load the model from disk
+    try:
+        loaded_model = pickle.load(open('finalized_model.sav', 'rb'))
+    except:
+        print('No model file found. Try running fine_tune to get a model file.')
