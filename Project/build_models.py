@@ -37,8 +37,8 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import LinearSVC
 from sklearn.neural_network import MLPClassifier
 
-from intake import retrieve_data
-from clean import clean
+# from Project.intake import retrieve_data
+# from Project.clean import clean
 
 import warnings
 warnings.filterwarnings("ignore", category=FutureWarning)
@@ -49,7 +49,6 @@ def get_tfidf(df, min_df, ngram_range, penalty):
     tfidf = TfidfVectorizer(min_df = min_df, 
                             norm = penalty, 
                             encoding = 'latin-1', 
-                            max_df = 0.8,
                             binary = False,
                             ngram_range = ngram_range, 
                             stop_words = 'english')
@@ -57,6 +56,9 @@ def get_tfidf(df, min_df, ngram_range, penalty):
     features = tfidf.fit_transform(df.text_cleaned.astype('U').tolist())
     labels = df.Label
     print("Number of features:", features.shape[1]); print(" ")
+
+    with open('vectorizer.pk', 'wb') as fin:
+        pickle.dump(tfidf, fin)
     
     return features, labels, tfidf
 
@@ -160,8 +162,8 @@ def final_model(df):
     Best model is min_df = 25, ngram_range = (1,2), penalty  = 'l2' with acc = 0.585 and f1 = 0.571
     '''
     X_train, X_test, y_train, y_test = preprocess(df, 
-                                                  min_df = 25, 
-                                                  ngram_range= (1,2), 
+                                                  min_df = 20, 
+                                                  ngram_range= (0,2), 
                                                   penalty = 'l2')
 
     parameters = {'max_iter' : [100, 200, 500], 'C' : [0.5, 1, 5], 'multi_class': ['ovr', 'auto']}
@@ -176,7 +178,7 @@ def final_model(df):
     print("Confusion Matrix:"); print(confusion_matrix(y_test, preds))
 
     # save the model to disk
-    pickle.dump(model, open('finalized_model.sav', 'wb'))
+    pickle.dump(clf, open('finalized_model.sav', 'wb'))
 
     return
 
